@@ -45,6 +45,8 @@ fun App() {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var current by remember { mutableStateOf(sampleTracks[0]) }
     var playing by remember { mutableStateOf(false) }
+    val mine = remember { mutableStateListOf<Track>() }
+    val palette = listOf(Color(0xFF6A5AE0), Color(0xFF1E9E78), Color(0xFFD9534F), Color(0xFF2F7DD1), Color(0xFFE08A1E))
 
     Scaffold(
         containerColor = Bg,
@@ -75,9 +77,12 @@ fun App() {
             val play = { t: Track -> current = t; playing = true }
             when (tab) {
                 0 -> HomeScreen(current, playing, play)
-                1 -> SearchScreen()
-                2 -> LibraryScreen(play)
-                else -> CreateScreen()
+                1 -> SearchScreen(current, playing, play)
+                2 -> LibraryScreen(mine, current, playing, play)
+                else -> CreateScreen { name ->
+                    mine.add(0, Track(name, "You", palette[mine.size % palette.size]))
+                    tab = 2
+                }
             }
         }
     }

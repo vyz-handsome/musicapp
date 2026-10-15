@@ -35,13 +35,6 @@ val sampleTracks = listOf(
     Track("Low Tide", "Aru", Color(0xFF0F7A8A)),
 )
 
-private val genres = listOf(
-    "Pop" to Color(0xFFE8115B), "Hip-Hop" to Color(0xFFBC5900),
-    "Rock" to Color(0xFFE91429), "Indie" to Color(0xFF608108),
-    "Chill" to Color(0xFF477D95), "Workout" to Color(0xFF777777),
-    "Podcasts" to Color(0xFF0D73EC), "Charts" to Color(0xFF8D67AB),
-)
-
 @Composable
 fun Cover(color: Color, size: Dp, radius: Dp = 4.dp) {
     Box(
@@ -66,73 +59,3 @@ fun Chip(label: String, selected: Boolean, modifier: Modifier = Modifier) {
 
 @Composable
 fun Title(text: String) = Text(text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-@Composable
-fun SearchScreen() {
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Title("Search") }
-        item {
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White).padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Filled.Search, null, tint = Color.Black)
-                Text("What do you want to listen to?", Modifier.padding(start = 10.dp),
-                    color = Color(0xFF535353), fontWeight = FontWeight.Bold)
-            }
-        }
-        item { Text("Browse all", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
-        items(genres.chunked(2)) { pair ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                pair.forEach { (name, c) ->
-                    Box(Modifier.weight(1f).height(96.dp).clip(RoundedCornerShape(8.dp)).background(c).padding(12.dp)) {
-                        Text(name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun LibraryScreen(onPlay: (Track) -> Unit) {
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Title("Your Library") }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip("Playlists", false); Chip("Artists", false); Chip("Albums", false)
-            }
-        }
-        items(sampleTracks) { t ->
-            Row(Modifier.fillMaxWidth().clickable { onPlay(t) }, verticalAlignment = Alignment.CenterVertically) {
-                Cover(t.color, 56.dp)
-                Column(Modifier.padding(start = 12.dp)) {
-                    Text(t.title, fontWeight = FontWeight.Bold, maxLines = 1)
-                    Text("Playlist • ${t.artist}", color = Sub, fontSize = 13.sp, maxLines = 1)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun CreateScreen() {
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Title("Create")
-        listOf(
-            Triple("Playlist", "Build a playlist with songs or episodes", Icons.Filled.MusicNote),
-            Triple("Blend", "Combine tastes in a shared playlist", Icons.Filled.Group),
-        ).forEach { (name, desc, icon) ->
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Card).padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(icon, null, Modifier.size(32.dp))
-                Column(Modifier.padding(start = 14.dp)) {
-                    Text(name, fontWeight = FontWeight.Bold)
-                    Text(desc, color = Sub, fontSize = 13.sp)
-                }
-            }
-        }
-    }
-}
