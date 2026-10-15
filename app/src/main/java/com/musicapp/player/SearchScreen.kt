@@ -1,6 +1,7 @@
 package com.musicapp.player
 
 import androidx.compose.foundation.background
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,8 +35,18 @@ private val genres = listOf(
 fun SearchScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
     var query by remember { mutableStateOf("") }
     val q = query.trim()
-    val results = if (q.isEmpty()) emptyList()
-    else sampleTracks.filter { it.title.contains(q, true) || it.artist.contains(q, true) }
+    var results by remember { mutableStateOf<List<Track>>(emptyList()) }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(q) {
+        results = emptyList(); error = null
+        if (q.length < 2) { loading = false; return@LaunchedEffect }
+        loading = true
+        delay(500)
+        try { results = Api.search(q) }
+        catch (e: Exception) { error = "Search failed. Check your internet connection and try again." }
+        loading = false
+    }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Title("Search") }
@@ -74,14 +85,20 @@ fun SearchScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
         } else if (results.isEmpty()) {
             item {
                 Column(Modifier.fillMaxWidth().padding(top = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Couldn't find \"$q\"", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Text("Check the spelling, or try a different title or artist.", color = Sub, fontSize = 14.sp)
+                    when {
+                        loading -> Text("Searching...", color = Sub, fontSize = 16.sp)
+                        error != null -> Text(error ?: "", color = Sub, fontSize = 14.sp)
+                        else -> {
+                            Text("Couldn't find \"$q\"", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text("Check the spelling, or try a different title or artist.", color = Sub, fontSize = 14.sp)
+                        }
+                    }
                 }
             }
         } else {
             items(results) { t ->
                 Row(Modifier.fillMaxWidth().clickable { onPlay(t) }, verticalAlignment = Alignment.CenterVertically) {
-                    Cover(t.color, 56.dp)
+                    Cover(t.color, 56.dp, url = t.cover)
                     Column(Modifier.padding(start = 12.dp)) {
                         Text(t.title, fontWeight = FontWeight.Bold, maxLines = 1,
                             color = if (t == current && playing) Green else Color.White)

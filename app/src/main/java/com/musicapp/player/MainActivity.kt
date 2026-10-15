@@ -1,6 +1,18 @@
 package com.musicapp.player
 
+import android.content.ComponentName
+import android.net.Uri
 import android.os.Bundle
+import kotlinx.coroutines.launch
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,7 +39,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { AppTheme { App() } }
+        setContent { AppTheme { Root() } }
     }
 }
 
@@ -41,18 +53,74 @@ private val tabs = listOf(
 )
 
 @Composable
+fun Root() {
+    val ctx = LocalContext.current
+    val first = remember { !Engine.wasReady(ctx) }
+    var done by remember { mutableStateOf(Engine.done) }
+    LaunchedEffect(Unit) {
+        if (!done) { Engine.init(ctx); done = true }
+        Engine.updateIfStale(ctx)
+    }
+    if (done) App() else LoadingScreen(first)
+}
+
+@Composable
 fun App() {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var current by remember { mutableStateOf(sampleTracks[0]) }
     var playing by remember { mutableStateOf(false) }
     val mine = remember { mutableStateListOf<Track>() }
+    val ctx = LocalContext.current
+    var controller by remember { mutableStateOf<MediaController?>(null) }
+    val notifPerm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    LaunchedEffect(Unit) {
+        if (android.os.Build.VERSION.SDK_INT >= 33) notifPerm.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
+    DisposableEffect(Unit) {
+        val f = MediaController.Builder(ctx, SessionToken(ctx, ComponentName(ctx, PlaybackService::class.java))).buildAsync()
+        f.addListener({ controller = f.get() }, ContextCompat.getMainExecutor(ctx))
+        onDispose { MediaController.releaseFuture(f) }
+    }
+    DisposableEffect(controller) {
+        val c = controller
+        val l = object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) { playing = isPlaying }
+        }
+        c?.addListener(l)
+        onDispose { c?.removeListener(l) }
+    }
+    val scope = rememberCoroutineScope()
+    val playTrack: (Track) -> Unit = { t ->
+        current = t
+        val c = controller
+        if (c != null) {
+            if (t.id.isEmpty()) c.pause() else scope.launch {
+                try {
+                    val url = Api.streamUrl(t)
+                    val item = MediaItem.Builder()
+                        .setUri(url)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder().setTitle(t.title).setArtist(t.artist)
+                                .setArtworkUri(t.cover?.let { Uri.parse(it) }).build()
+                        ).build()
+                    c.setMediaItem(item); c.prepare(); c.play()
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(ctx, "Gagal memutar lagu ini", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    val toggle: () -> Unit = {
+        val c = controller
+        if (c != null && c.mediaItemCount > 0) { if (c.isPlaying) c.pause() else c.play() }
+    }
     val palette = listOf(Color(0xFF6A5AE0), Color(0xFF1E9E78), Color(0xFFD9534F), Color(0xFF2F7DD1), Color(0xFFE08A1E))
 
     Scaffold(
         containerColor = Bg,
         bottomBar = {
             Column {
-                MiniPlayer(current, playing) { playing = !playing }
+                MiniPlayer(current, playing) { toggle() }
                 NavigationBar(containerColor = Bg) {
                     tabs.forEachIndexed { i, t ->
                         NavigationBarItem(
@@ -74,7 +142,7 @@ fun App() {
         },
     ) { pad ->
         Box(Modifier.padding(pad).fillMaxSize()) {
-            val play = { t: Track -> current = t; playing = true }
+            val play = playTrack
             when (tab) {
                 0 -> HomeScreen(current, playing, play)
                 1 -> SearchScreen(current, playing, play)
@@ -100,7 +168,7 @@ private fun MiniPlayer(t: Track, playing: Boolean, onToggle: () -> Unit) {
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Cover(t.color, 40.dp)
+        Cover(t.color, 40.dp, url = t.cover)
         Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
             Text(t.title, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
             Text(t.artist, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1)

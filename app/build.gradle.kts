@@ -13,8 +13,10 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1"
+        ndk { abiFilters += listOf("arm64-v8a") }
     }
     buildFeatures { compose = true }
+    packaging { jniLibs { useLegacyPackaging = true } }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -29,4 +31,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-session:1.4.1")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.github.junkfood02.youtubedl-android:library:0.17.2")
 }

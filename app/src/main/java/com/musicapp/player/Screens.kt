@@ -19,10 +19,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-data class Track(val title: String, val artist: String, val color: Color)
+data class Track(val title: String, val artist: String, val color: Color, val id: String = "", val cover: String? = null)
 
 val sampleTracks = listOf(
     Track("Liked Songs", "Playlist", Color(0xFF4A3AFF)),
@@ -36,7 +38,14 @@ val sampleTracks = listOf(
 )
 
 @Composable
-fun Cover(color: Color, size: Dp, radius: Dp = 4.dp) {
+fun Cover(color: Color, size: Dp, radius: Dp = 4.dp, url: String? = null) {
+    if (url != null) {
+        AsyncImage(
+            model = url, contentDescription = null, contentScale = ContentScale.Crop,
+            modifier = Modifier.size(size).clip(RoundedCornerShape(radius)).background(Card),
+        )
+        return
+    }
     Box(
         Modifier.size(size).clip(RoundedCornerShape(radius))
             .background(Brush.linearGradient(listOf(color, color.copy(alpha = 0.55f)))),
