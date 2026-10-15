@@ -74,7 +74,7 @@ fun App() {
         Box(Modifier.padding(pad).fillMaxSize()) {
             val play = { t: Track -> current = t; playing = true }
             when (tab) {
-                0 -> HomeScreen(play)
+                0 -> HomeScreen(current, playing, play)
                 1 -> SearchScreen()
                 2 -> LibraryScreen(play)
                 else -> CreateScreen()

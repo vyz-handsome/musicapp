@@ -54,10 +54,10 @@ fun Cover(color: Color, size: Dp, radius: Dp = 4.dp) {
 }
 
 @Composable
-private fun Chip(label: String, selected: Boolean) {
+fun Chip(label: String, selected: Boolean, modifier: Modifier = Modifier) {
     Text(
         label,
-        Modifier.clip(RoundedCornerShape(50)).background(if (selected) Green else Card)
+        Modifier.clip(RoundedCornerShape(50)).background(if (selected) Green else Card).then(modifier)
             .padding(horizontal = 14.dp, vertical = 7.dp),
         color = if (selected) Color.Black else Color.White,
         fontSize = 13.sp, fontWeight = FontWeight.Medium,
@@ -65,54 +65,7 @@ private fun Chip(label: String, selected: Boolean) {
 }
 
 @Composable
-private fun Title(text: String) = Text(text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-@Composable
-fun HomeScreen(onPlay: (Track) -> Unit) {
-    val hour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
-    val greet = when { hour < 12 -> "Good morning"; hour < 18 -> "Good afternoon"; else -> "Good evening" }
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        item { Title(greet) }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip("All", true); Chip("Music", false); Chip("Podcasts", false)
-            }
-        }
-        items(sampleTracks.take(6).chunked(2)) { pair ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                pair.forEach { t ->
-                    Row(
-                        Modifier.weight(1f).height(56.dp).clip(RoundedCornerShape(4.dp)).background(Card)
-                            .clickable { onPlay(t) },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Cover(t.color, 56.dp, 0.dp)
-                        Text(t.title, Modifier.padding(horizontal = 8.dp), fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold, maxLines = 2)
-                    }
-                }
-            }
-        }
-        item { Shelf("Made for you", sampleTracks.reversed(), onPlay) }
-        item { Shelf("Recently played", sampleTracks.shuffled(java.util.Random(7)), onPlay) }
-    }
-}
-
-@Composable
-private fun Shelf(title: String, list: List<Track>, onPlay: (Track) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(list) { t ->
-                Column(Modifier.width(140.dp).clickable { onPlay(t) }) {
-                    Cover(t.color, 140.dp)
-                    Text(t.title, Modifier.padding(top = 6.dp), fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                    Text(t.artist, color = Sub, fontSize = 12.sp, maxLines = 1)
-                }
-            }
-        }
-    }
-}
+fun Title(text: String) = Text(text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
 
 @Composable
 fun SearchScreen() {
