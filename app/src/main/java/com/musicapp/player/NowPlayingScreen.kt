@@ -29,6 +29,7 @@ private fun fmt(ms: Long): String {
     return "%d:%02d".format(s / 60, s % 60)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NowPlayingScreen(
     t: Track, playing: Boolean, controller: MediaController?, liked: Boolean,
