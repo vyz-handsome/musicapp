@@ -94,26 +94,32 @@ fun App() {
         onDispose { MediaController.releaseFuture(f) }
     }
 
-    val playTrack: (Track) -> Unit = { t ->
+    fun toast(m: String) = android.widget.Toast.makeText(ctx, m, android.widget.Toast.LENGTH_LONG).show()
+    fun startTrack(t: Track, skipsLeft: Int) {
         current = t
-        val c = controller
-        if (c != null) {
-            if (t.id.isEmpty()) c.pause() else scope.launch {
-                try {
-                    val url = Api.streamUrl(t)
-                    val item = MediaItem.Builder()
-                        .setUri(url)
-                        .setMediaMetadata(
-                            MediaMetadata.Builder().setTitle(t.title).setArtist(t.artist)
-                                .setArtworkUri(t.cover?.let { Uri.parse(it) }).build()
-                        ).build()
-                    c.setMediaItem(item); c.prepare(); c.play()
-                } catch (e: Exception) {
-                    android.widget.Toast.makeText(ctx, "Gagal memutar lagu ini", android.widget.Toast.LENGTH_SHORT).show()
-                }
+        val c = controller ?: return
+        if (t.id.isEmpty()) { c.pause(); return }
+        scope.launch {
+            try {
+                val url = Api.streamUrl(t)
+                val item = MediaItem.Builder()
+                    .setUri(url)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder().setTitle(t.title).setArtist(t.artist)
+                            .setArtworkUri(t.cover?.let { Uri.parse(it) }).build()
+                    ).build()
+                c.setMediaItem(item); c.prepare(); c.play()
+            } catch (e: Exception) {
+                val msg = (e.message ?: e.javaClass.simpleName).lineSequence().last { it.isNotBlank() }.take(90)
+                val i = queue.indexOf(t)
+                if (skipsLeft > 0 && i in 0 until queue.size - 1) {
+                    toast("Dilewati: $msg")
+                    startTrack(queue[i + 1], skipsLeft - 1)
+                } else toast("Gagal memutar: $msg")
             }
         }
     }
+    val playTrack: (Track) -> Unit = { startTrack(it, 0) }
     val next: () -> Unit = {
         val i = queue.indexOf(current)
         if (queue.isNotEmpty()) {
@@ -123,7 +129,7 @@ fun App() {
                 repeat == 1 -> queue[0]
                 else -> null
             }
-            if (n != null) playTrack(n)
+            if (n != null) startTrack(n, 2)
         }
     }
     val prev: () -> Unit = {

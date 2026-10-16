@@ -55,15 +55,21 @@ object Api {
         return out.lines().filter { it.isNotBlank() }.mapNotNull { runCatching { JSONObject(it) }.getOrNull() }.map { j ->
             val id = j.getString("id")
             Track(j.str("title"), j.str("channel").ifEmpty { j.str("uploader") }, colorFor(id),
-                "yt:$id", "https://i.ytimg.com/vi/$id/hqdefault.jpg")
+                "yt:$id", "https://i.ytimg.com/vi/$id/mqdefault.jpg")
         }
     }
 
     private fun ytStream(raw: String): String {
         require(Regex("^[\\w-]{6,20}$").matches(raw))
-        val r = YoutubeDLRequest("https://www.youtube.com/watch?v=$raw")
-        r.addOption("-f", "bestaudio[ext=m4a]/bestaudio")
+        val url = "https://www.youtube.com/watch?v=$raw"
+        return try { extract(url, null) } catch (e: Exception) { extract(url, "youtube:player_client=android_vr,web_safari") }
+    }
+
+    private fun extract(url: String, clientArgs: String?): String {
+        val r = YoutubeDLRequest(url)
+        r.addOption("-f", "bestaudio[ext=m4a]/bestaudio/best")
         r.addOption("-g"); r.addOption("--no-playlist"); r.addOption("--no-warnings")
+        if (clientArgs != null) r.addOption("--extractor-args", clientArgs)
         return YoutubeDL.getInstance().execute(r).out.lines().first { it.trim().startsWith("http") }.trim()
     }
 
