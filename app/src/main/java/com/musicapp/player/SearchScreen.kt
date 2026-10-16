@@ -32,7 +32,7 @@ private val genres = listOf(
 )
 
 @Composable
-fun SearchScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
+fun SearchScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit, onQueue: (List<Track>) -> Unit) {
     var query by remember { mutableStateOf("") }
     val q = query.trim()
     var results by remember { mutableStateOf<List<Track>>(emptyList()) }
@@ -97,7 +97,7 @@ fun SearchScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
             }
         } else {
             items(results) { t ->
-                Row(Modifier.fillMaxWidth().clickable { onPlay(t) }, verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().clickable { onQueue(results); onPlay(t) }, verticalAlignment = Alignment.CenterVertically) {
                     Cover(t.color, 56.dp, url = t.cover)
                     Column(Modifier.padding(start = 12.dp)) {
                         Text(t.title, fontWeight = FontWeight.Bold, maxLines = 1,
