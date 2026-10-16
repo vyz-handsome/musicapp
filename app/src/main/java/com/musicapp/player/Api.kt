@@ -54,8 +54,9 @@ object Api {
         val out = YoutubeDL.getInstance().execute(r).out
         return out.lines().filter { it.isNotBlank() }.mapNotNull { runCatching { JSONObject(it) }.getOrNull() }.map { j ->
             val id = j.getString("id")
+            val dur = if (j.isNull("duration")) 0 else j.optDouble("duration", 0.0).toInt()
             Track(j.str("title"), j.str("channel").ifEmpty { j.str("uploader") }, colorFor(id),
-                "yt:$id", "https://i.ytimg.com/vi/$id/mqdefault.jpg")
+                "yt:$id", "https://i.ytimg.com/vi/$id/mqdefault.jpg", dur)
         }
     }
 
@@ -83,7 +84,7 @@ object Api {
                 val o = data.getJSONObject(i)
                 val id = o.getString("id")
                 val cover = o.optJSONObject("artwork")?.str("480x480")?.ifEmpty { null }
-                Track(o.str("title"), o.optJSONObject("user")?.str("name") ?: "", colorFor(id), "au:$id", cover)
+                Track(o.str("title"), o.optJSONObject("user")?.str("name") ?: "", colorFor(id), "au:$id", cover, o.optInt("duration"))
             }
         } finally { c.disconnect() }
     }

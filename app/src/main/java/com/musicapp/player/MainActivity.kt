@@ -74,6 +74,7 @@ fun App() {
     var current by remember { mutableStateOf(sampleTracks[0]) }
     var playing by remember { mutableStateOf(false) }
     var showNow by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
     var shuffle by remember { mutableStateOf(false) }
     var repeat by remember { mutableIntStateOf(0) } // 0 off, 1 all, 2 one
     var queue by remember { mutableStateOf(listOf<Track>()) }
@@ -99,6 +100,7 @@ fun App() {
         current = t
         val c = controller ?: return
         if (t.id.isEmpty()) { c.pause(); return }
+        loading = true
         scope.launch {
             try {
                 val url = Api.streamUrl(t)
@@ -110,6 +112,7 @@ fun App() {
                     ).build()
                 c.setMediaItem(item); c.prepare(); c.play()
             } catch (e: Exception) {
+                loading = false
                 val msg = (e.message ?: e.javaClass.simpleName).lineSequence().last { it.isNotBlank() }.take(90)
                 val i = queue.indexOf(t)
                 if (skipsLeft > 0 && i in 0 until queue.size - 1) {
@@ -149,6 +152,7 @@ fun App() {
         val l = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) { playing = isPlaying }
             override fun onPlaybackStateChanged(state: Int) {
+                loading = state == Player.STATE_BUFFERING
                 if (state == Player.STATE_ENDED) {
                     if (repeatRef == 2) { c?.seekTo(0); c?.play() } else nextRef()
                 }
@@ -202,7 +206,7 @@ fun App() {
         }
         AnimatedVisibility(visible = showNow, enter = slideInVertically { it }, exit = slideOutVertically { it }) {
             NowPlayingScreen(
-                t = current, playing = playing, controller = controller, liked = isLiked,
+                t = current, playing = playing, loading = loading, controller = controller, liked = isLiked,
                 shuffle = shuffle, repeat = repeat, queue = queue,
                 onClose = { showNow = false }, onLike = { toggleLike() }, onToggle = toggle,
                 onPrev = prev, onNext = next,

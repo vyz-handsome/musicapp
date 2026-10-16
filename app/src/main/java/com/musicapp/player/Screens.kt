@@ -24,7 +24,7 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-data class Track(val title: String, val artist: String, val color: Color, val id: String = "", val cover: String? = null)
+data class Track(val title: String, val artist: String, val color: Color, val id: String = "", val cover: String? = null, val durationSec: Int = 0)
 
 val sampleTracks = listOf(
     Track("Liked Songs", "Playlist", Color(0xFF4A3AFF)),
