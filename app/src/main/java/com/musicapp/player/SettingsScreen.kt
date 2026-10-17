@@ -49,26 +49,26 @@ fun SettingsScreen(onBack: () -> Unit) {
             SectionLabel("Appearance")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ThemeCard("Spotify", Color(0xFF121212), Color(0xFF2A2A2A), Color(0xFF1ED760), Color.White, !isApple, Modifier.weight(1f)) {
-                    Prefs.setTheme("spotify")
+                    Prefs.chooseTheme("spotify")
                 }
                 ThemeCard(
                     "Apple Music", if (Prefs.dark) Color.Black else Color.White,
                     if (Prefs.dark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7), Color(0xFFFA243C),
                     if (Prefs.dark) Color.White else Color.Black, isApple, Modifier.weight(1f),
-                ) { Prefs.setTheme("apple") }
+                ) { Prefs.chooseTheme("apple") }
             }
             if (isApple) {
                 Spacer(Modifier.height(14.dp))
-                ChoiceRow("Appearance", listOf("Light", "Dark"), if (Prefs.dark) 1 else 0) { Prefs.setDark(it == 1) }
+                ChoiceRow("Appearance", listOf("Light", "Dark"), if (Prefs.dark) 1 else 0) { Prefs.chooseDark(it == 1) }
             }
 
             SectionLabel("Playback")
-            ChoiceRow("Audio quality", listOf("Low", "Normal", "High"), Prefs.quality, "Lower quality uses less data. Applies to the next song.") { Prefs.setQuality(it) }
-            ToggleRow("Autoplay", "Keep playing the next song in the queue", Prefs.autoplay) { Prefs.setAutoplay(it) }
+            ChoiceRow("Audio quality", listOf("Low", "Normal", "High"), Prefs.quality, "Lower quality uses less data. Applies to the next song.") { Prefs.chooseQuality(it) }
+            ToggleRow("Autoplay", "Keep playing the next song in the queue", Prefs.autoplay) { Prefs.chooseAutoplay(it) }
 
             SectionLabel("Lyrics")
-            ToggleRow("Show lyrics", "Fetch and show synced lyrics in the player", Prefs.lyricsOn) { Prefs.setLyrics(it) }
-            ToggleRow("Blur effect", "Blur lyric lines that are not playing (Android 12+)", Prefs.blurOn) { Prefs.setBlur(it) }
+            ToggleRow("Show lyrics", "Fetch and show synced lyrics in the player", Prefs.lyricsOn) { Prefs.chooseLyrics(it) }
+            ToggleRow("Blur effect", "Blur lyric lines that are not playing (Android 12+)", Prefs.blurOn) { Prefs.chooseBlur(it) }
 
             SectionLabel("Storage")
             ActionRow("Clear cache", "Cached stream links, lyrics and cover images", true) {

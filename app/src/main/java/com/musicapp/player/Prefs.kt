@@ -35,10 +35,10 @@ object Prefs {
         blurOn = p.getBoolean("blur", true)
     }
 
-    fun setTheme(v: String) { theme = v; sp?.edit()?.putString("theme", v)?.apply() }
-    fun setDark(v: Boolean) { dark = v; sp?.edit()?.putBoolean("dark", v)?.apply() }
-    fun setQuality(v: Int) { quality = v; sp?.edit()?.putInt("quality", v)?.apply() }
-    fun setAutoplay(v: Boolean) { autoplay = v; sp?.edit()?.putBoolean("autoplay", v)?.apply() }
-    fun setLyrics(v: Boolean) { lyricsOn = v; sp?.edit()?.putBoolean("lyrics", v)?.apply() }
-    fun setBlur(v: Boolean) { blurOn = v; sp?.edit()?.putBoolean("blur", v)?.apply() }
+    fun chooseTheme(v: String) { theme = v; sp?.edit()?.putString("theme", v)?.apply() }
+    fun chooseDark(v: Boolean) { dark = v; sp?.edit()?.putBoolean("dark", v)?.apply() }
+    fun chooseQuality(v: Int) { quality = v; sp?.edit()?.putInt("quality", v)?.apply() }
+    fun chooseAutoplay(v: Boolean) { autoplay = v; sp?.edit()?.putBoolean("autoplay", v)?.apply() }
+    fun chooseLyrics(v: Boolean) { lyricsOn = v; sp?.edit()?.putBoolean("lyrics", v)?.apply() }
+    fun chooseBlur(v: Boolean) { blurOn = v; sp?.edit()?.putBoolean("blur", v)?.apply() }
 }
