@@ -25,6 +25,19 @@ object Engine {
         done = true
     }
 
+    suspend fun updateNow(ctx: Context): String = withContext(Dispatchers.IO) {
+        if (!ytOk) return@withContext "yt-dlp belum siap"
+        try {
+            val s = YoutubeDL.getInstance().updateYoutubeDL(ctx.applicationContext)
+            prefs(ctx).edit().putLong("updated", System.currentTimeMillis()).apply()
+            "Update selesai: $s"
+        } catch (e: Throwable) { "Gagal update: " + (e.message ?: "").take(60) }
+    }
+
+    fun version(ctx: Context): String = try {
+        YoutubeDL.getInstance().version(ctx.applicationContext) ?: "-"
+    } catch (e: Throwable) { "-" }
+
     // Update yt-dlp di background kalau udah lebih dari 3 hari.
     suspend fun updateIfStale(ctx: Context) = withContext(Dispatchers.IO) {
         if (!ytOk) return@withContext

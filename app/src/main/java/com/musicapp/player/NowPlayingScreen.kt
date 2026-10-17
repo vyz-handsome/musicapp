@@ -154,7 +154,7 @@ private fun RoundBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, desc
 private fun LyricLineRow(text: String, d: Int, onClick: () -> Unit) {
     val a = abs(d)
     val alpha by animateFloatAsState(when { d == 0 -> 1f; a == 1 -> 0.55f; a == 2 -> 0.32f; else -> 0.18f }, tween(350), label = "la")
-    val blur by animateFloatAsState(when { d == 0 -> 0f; a == 1 -> 0.5f; a == 2 -> 1f; else -> 1.5f }, tween(450), label = "lb")
+    val blur by animateFloatAsState(if (!Prefs.blurOn) 0f else when { d == 0 -> 0f; a == 1 -> 0.5f; a == 2 -> 1f; else -> 1.5f }, tween(450), label = "lb")
     val scale by animateFloatAsState(if (d == 0) 1.05f else 0.97f, tween(450), label = "ls")
     val dy by animateFloatAsState(when { d == 0 -> 0f; d < 0 -> -16f; else -> 16f }, tween(450), label = "ld")
     Text(
@@ -183,6 +183,7 @@ private fun Modifier.fadeEdges() = this
 @Composable
 private fun LyricsPane(res: LyricsResult?, active: Int, onSeek: (Long) -> Unit, modifier: Modifier) {
     when {
+        !Prefs.lyricsOn -> Box(modifier)
         res == null -> Box(modifier, Alignment.TopCenter) { Text("Memuat lirik...", Modifier.padding(top = 40.dp), color = Color.White.copy(alpha = 0.5f), fontSize = 15.sp) }
         res.lines.isNotEmpty() -> BoxWithConstraints(modifier) {
             val state = rememberLazyListState()
@@ -237,7 +238,7 @@ fun NowPlayingScreen(
     var res by remember(t.id) { mutableStateOf<LyricsResult?>(null) }
     val base = rememberCoverColor(t.cover, t.color)
 
-    LaunchedEffect(t.id) { res = if (t.id.isEmpty()) LyricsResult(emptyList(), null) else Lyrics.get(t) }
+    LaunchedEffect(t.id, Prefs.lyricsOn) { res = if (t.id.isEmpty() || !Prefs.lyricsOn) LyricsResult(emptyList(), null) else Lyrics.get(t) }
     LaunchedEffect(controller, t) {
         while (true) {
             controller?.let { pos = it.currentPosition.coerceAtLeast(0L); dur = it.duration.coerceAtLeast(0L) }

@@ -22,6 +22,13 @@ object Api {
     private const val AU = "https://api.audius.co"
     private const val APP = "musicapp"
     private val cache = HashMap<String, Pair<String, Long>>()
+    fun clearCache() = cache.clear()
+
+    private fun audioFormat() = when (Prefs.quality) {
+        0 -> "bestaudio[abr<=64]/worstaudio/worst"
+        1 -> "bestaudio[ext=m4a][abr<=130]/bestaudio[abr<=130]/bestaudio/best"
+        else -> "bestaudio[ext=m4a]/bestaudio/best"
+    }
 
     suspend fun search(q: String): List<Track> = withContext(Dispatchers.IO) {
         var list = emptyList<Track>()
@@ -32,7 +39,7 @@ object Api {
     }
 
     suspend fun streamUrl(t: Track): String = withContext(Dispatchers.IO) {
-        cache[t.id]?.let { if (it.second > System.currentTimeMillis()) return@withContext it.first }
+        cache[t.id + Prefs.quality]?.let { if (it.second > System.currentTimeMillis()) return@withContext it.first }
         val src = t.id.substringBefore(':')
         val raw = t.id.substringAfter(':')
         var url: String? = null
@@ -44,7 +51,7 @@ object Api {
             val alt = auSearch("${t.title} ${t.artist}").firstOrNull() ?: error("no source")
             url = auStream(alt.id.substringAfter(':'))
         }
-        cache[t.id] = url to System.currentTimeMillis() + 20 * 60 * 1000
+        cache[t.id + Prefs.quality] = url to System.currentTimeMillis() + 20 * 60 * 1000
         url
     }
 
@@ -68,7 +75,7 @@ object Api {
 
     private fun extract(url: String, clientArgs: String?): String {
         val r = YoutubeDLRequest(url)
-        r.addOption("-f", "bestaudio[ext=m4a]/bestaudio/best")
+        r.addOption("-f", audioFormat())
         r.addOption("-g"); r.addOption("--no-playlist"); r.addOption("--no-warnings")
         if (clientArgs != null) r.addOption("--extractor-args", clientArgs)
         return YoutubeDL.getInstance().execute(r).out.lines().first { it.trim().startsWith("http") }.trim()

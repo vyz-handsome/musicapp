@@ -1,6 +1,11 @@
 package com.musicapp.player
 
+import android.app.Activity
 import android.content.ComponentName
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -43,13 +48,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        Prefs.load(this)
         setContent { AppTheme { Root() } }
     }
 }
 
 private data class Tab(val label: String, val icon: ImageVector)
 
-private val tabs = listOf(
+private fun tabsFor(apple: Boolean) = if (apple) listOf(
+    Tab("Listen Now", Icons.Filled.PlayCircle),
+    Tab("Search", Icons.Filled.Search),
+    Tab("Library", Icons.Filled.LibraryMusic),
+    Tab("Create", Icons.Filled.Add),
+) else listOf(
     Tab("Home", Icons.Filled.Home),
     Tab("Search", Icons.Filled.Search),
     Tab("Your Library", Icons.Filled.LibraryMusic),
@@ -74,6 +85,7 @@ fun App() {
     var current by remember { mutableStateOf(sampleTracks[0]) }
     var playing by remember { mutableStateOf(false) }
     var showNow by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
     var shuffle by remember { mutableStateOf(false) }
     var repeat by remember { mutableIntStateOf(0) } // 0 off, 1 all, 2 one
@@ -154,7 +166,7 @@ fun App() {
             override fun onPlaybackStateChanged(state: Int) {
                 loading = state == Player.STATE_BUFFERING
                 if (state == Player.STATE_ENDED) {
-                    if (repeatRef == 2) { c?.seekTo(0); c?.play() } else nextRef()
+                    if (repeatRef == 2) { c?.seekTo(0); c?.play() } else if (Prefs.autoplay) nextRef()
                 }
             }
         }
@@ -166,22 +178,32 @@ fun App() {
     val isLiked = key in liked
     val toggleLike = { if (isLiked) liked.remove(key) else liked.add(key); Unit }
 
+    val darkUi = !isApple || Prefs.dark || showNow
+    val view = LocalView.current
+    SideEffect {
+        (ctx as? Activity)?.window?.let { w ->
+            val c = WindowCompat.getInsetsController(w, view)
+            c.isAppearanceLightStatusBars = !darkUi
+            c.isAppearanceLightNavigationBars = !darkUi
+        }
+    }
+
     Box(Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = Bg,
             bottomBar = {
                 Column {
                     MiniPlayer(current, playing, isLiked, { showNow = true }, toggleLike, toggle)
-                    NavigationBar(containerColor = Bg) {
-                        tabs.forEachIndexed { i, t ->
+                    NavigationBar(containerColor = Bg, tonalElevation = 0.dp) {
+                        tabsFor(isApple).forEachIndexed { i, t ->
                             NavigationBarItem(
                                 selected = tab == i,
                                 onClick = { tab = i },
                                 icon = { Icon(t.icon, t.label) },
                                 label = { Text(t.label, fontSize = 11.sp) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.White,
-                                    selectedTextColor = Color.White,
+                                    selectedIconColor = if (isApple) Green else Ink,
+                                    selectedTextColor = if (isApple) Green else Ink,
                                     unselectedIconColor = Sub,
                                     unselectedTextColor = Sub,
                                     indicatorColor = Color.Transparent,
@@ -194,7 +216,7 @@ fun App() {
         ) { pad ->
             Box(Modifier.padding(pad).fillMaxSize()) {
                 when (tab) {
-                    0 -> HomeScreen(current, playing, playTrack)
+                    0 -> HomeScreen(current, playing, playTrack) { showSettings = true }
                     1 -> SearchScreen(current, playing, playTrack) { queue = it }
                     2 -> LibraryScreen(mine, current, playing, playTrack)
                     else -> CreateScreen { name ->
@@ -214,7 +236,11 @@ fun App() {
                 onPick = playTrack,
             )
         }
+        AnimatedVisibility(visible = showSettings, enter = slideInHorizontally { it }, exit = slideOutHorizontally { it }) {
+            SettingsScreen { showSettings = false }
+        }
     }
+    BackHandler(enabled = showSettings) { showSettings = false }
     BackHandler(enabled = showNow) { showNow = false }
 }
 
@@ -228,7 +254,7 @@ private fun MiniPlayer(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(t.color.copy(alpha = 0.55f))
+            .background(if (isApple) Card else t.color.copy(alpha = 0.55f))
             .clickable { onOpen() }
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -236,11 +262,11 @@ private fun MiniPlayer(
         Cover(t.color, 40.dp, url = t.cover)
         Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
             Text(t.title, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
-            Text(t.artist, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1)
+            Text(t.artist, color = if (isApple) Sub else Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1)
         }
         Icon(
             if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "Like",
-            Modifier.clickable { onLike() }.padding(8.dp), tint = if (liked) Green else Color.White,
+            Modifier.clickable { onLike() }.padding(8.dp), tint = if (liked) Green else Ink,
         )
         Icon(
             if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, "Play/Pause",

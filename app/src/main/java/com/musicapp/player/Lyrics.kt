@@ -14,6 +14,7 @@ data class LyricsResult(val lines: List<LyricLine>, val plain: String?)
 // Lirik dari LRCLIB: cari yang sinkron dulu (durasi dicocokin), kalau gak ada pakai lirik biasa.
 object Lyrics {
     private val cache = HashMap<String, LyricsResult>()
+    fun clear() = cache.clear()
     private val stamp = Regex("\\[(\\d{1,2}):(\\d{2})(?:[.:](\\d{1,3}))?]")
 
     suspend fun get(t: Track): LyricsResult = withContext(Dispatchers.IO) {

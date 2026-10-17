@@ -38,7 +38,7 @@ val sampleTracks = listOf(
 )
 
 @Composable
-fun Cover(color: Color, size: Dp, radius: Dp = 4.dp, url: String? = null) {
+fun Cover(color: Color, size: Dp, radius: Dp = if (isApple) 8.dp else 4.dp, url: String? = null) {
     if (url != null) {
         AsyncImage(
             model = url, contentDescription = null, contentScale = ContentScale.Crop,
@@ -61,10 +61,10 @@ fun Chip(label: String, selected: Boolean, modifier: Modifier = Modifier) {
         label,
         Modifier.clip(RoundedCornerShape(50)).background(if (selected) Green else Card).then(modifier)
             .padding(horizontal = 14.dp, vertical = 7.dp),
-        color = if (selected) Color.Black else Color.White,
+        color = if (selected) OnAccent else Ink,
         fontSize = 13.sp, fontWeight = FontWeight.Medium,
     )
 }
 
 @Composable
-fun Title(text: String) = Text(text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+fun Title(text: String) = Text(text, fontSize = if (isApple) 32.sp else 24.sp, fontWeight = FontWeight.Bold)

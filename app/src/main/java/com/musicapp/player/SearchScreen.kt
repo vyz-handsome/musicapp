@@ -52,32 +52,32 @@ fun SearchScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit, onQu
         item { Title("Search") }
         item {
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White).padding(14.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(if (isApple) Card else Color.White).padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Filled.Search, null, tint = Color.Black)
+                Icon(Icons.Filled.Search, null, tint = if (isApple) Sub else Color.Black)
                 BasicTextField(
                     value = query, onValueChange = { query = it }, singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                    cursorBrush = SolidColor(Color.Black),
+                    textStyle = TextStyle(color = if (isApple) Ink else Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                    cursorBrush = SolidColor(if (isApple) Ink else Color.Black),
                     modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
                     decorationBox = { inner ->
                         Box {
-                            if (query.isEmpty()) Text("What do you want to listen to?", color = Color(0xFF535353), fontWeight = FontWeight.Bold)
+                            if (query.isEmpty()) Text(if (isApple) "Artists, Songs, Lyrics, and More" else "What do you want to listen to?", color = if (isApple) Sub else Color(0xFF535353), fontWeight = FontWeight.Bold)
                             inner()
                         }
                     },
                 )
-                if (query.isNotEmpty()) Icon(Icons.Filled.Close, "Clear", Modifier.clickable { query = "" }, tint = Color.Black)
+                if (query.isNotEmpty()) Icon(Icons.Filled.Close, "Clear", Modifier.clickable { query = "" }, tint = if (isApple) Sub else Color.Black)
             }
         }
         if (q.isEmpty()) {
-            item { Text("Browse all", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+            item { Text(if (isApple) "Browse Categories" else "Browse all", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
             items(genres.chunked(2)) { pair ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     pair.forEach { (name, c) ->
                         Box(Modifier.weight(1f).height(96.dp).clip(RoundedCornerShape(8.dp)).background(c).padding(12.dp)) {
-                            Text(name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
@@ -101,7 +101,7 @@ fun SearchScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit, onQu
                     Cover(t.color, 56.dp, url = t.cover)
                     Column(Modifier.padding(start = 12.dp)) {
                         Text(t.title, fontWeight = FontWeight.Bold, maxLines = 1,
-                            color = if (t == current && playing) Green else Color.White)
+                            color = if (t == current && playing) Green else Ink)
                         Text("Song • ${t.artist}", color = Sub, fontSize = 13.sp, maxLines = 1)
                     }
                 }

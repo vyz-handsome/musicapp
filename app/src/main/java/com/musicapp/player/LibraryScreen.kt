@@ -36,9 +36,9 @@ fun LibraryScreen(mine: List<Track>, current: Track, playing: Boolean, onPlay: (
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(32.dp).clip(CircleShape).background(Green), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Person, null, tint = Color.Black, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.Person, null, tint = OnAccent, modifier = Modifier.size(20.dp))
                 }
-                Text("Your Library", Modifier.padding(start = 12.dp), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text(if (isApple) "Library" else "Your Library", Modifier.padding(start = 12.dp), fontSize = 22.sp, fontWeight = FontWeight.Bold)
             }
         }
         item {
@@ -64,7 +64,7 @@ fun LibraryScreen(mine: List<Track>, current: Track, playing: Boolean, onPlay: (
                         Column(Modifier.weight(1f).clickable { onPlay(t) }) {
                             Cover(t.color, 140.dp, if (kind == "Artist") 70.dp else 4.dp)
                             Text(t.title, Modifier.padding(top = 6.dp), fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                                maxLines = 1, color = if (t == current && playing) Green else Color.White)
+                                maxLines = 1, color = if (t == current && playing) Green else Ink)
                             Text(kind, color = Sub, fontSize = 12.sp)
                         }
                     }
@@ -77,7 +77,7 @@ fun LibraryScreen(mine: List<Track>, current: Track, playing: Boolean, onPlay: (
                     Cover(t.color, 56.dp, if (kind == "Artist") 28.dp else 4.dp)
                     Column(Modifier.padding(start = 12.dp)) {
                         Text(t.title, fontWeight = FontWeight.Bold, maxLines = 1,
-                            color = if (t == current && playing) Green else Color.White)
+                            color = if (t == current && playing) Green else Ink)
                         Text(if (kind == "Artist") kind else "$kind • ${t.artist}", color = Sub, fontSize = 13.sp, maxLines = 1)
                     }
                 }

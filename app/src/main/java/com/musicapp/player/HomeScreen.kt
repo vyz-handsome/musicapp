@@ -39,7 +39,7 @@ private val artists = listOf(
 )
 
 @Composable
-fun HomeScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
+fun HomeScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit, onSettings: () -> Unit) {
     var filter by remember { mutableIntStateOf(0) }
     val hour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
     val greet = when { hour < 12 -> "Good morning"; hour < 18 -> "Good afternoon"; else -> "Good evening" }
@@ -47,14 +47,14 @@ fun HomeScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(greet, Modifier.weight(1f), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(if (isApple) "Listen Now" else greet, Modifier.weight(1f), fontSize = if (isApple) 32.sp else 24.sp, fontWeight = FontWeight.Bold)
                 Icon(Icons.Filled.Notifications, "Notifications")
                 Icon(Icons.Filled.History, "Listening history", Modifier.padding(start = 18.dp))
-                Icon(Icons.Filled.Settings, "Settings", Modifier.padding(start = 18.dp))
+                Icon(Icons.Filled.Settings, "Settings", Modifier.padding(start = 18.dp).clickable { onSettings() })
             }
         }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (!isApple) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("All", "Music", "Podcasts").forEachIndexed { i, label ->
                     Chip(label, filter == i, Modifier.clickable { filter = i })
                 }
@@ -64,7 +64,7 @@ fun HomeScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
             item { Shelf("Shows to try", podcasts, current, playing, onPlay) }
             item { Shelf("New episodes", podcasts.reversed(), current, playing, onPlay) }
         } else {
-            items(sampleTracks.take(6).chunked(2)) { pair ->
+            items(if (isApple) emptyList<List<Track>>() else sampleTracks.take(6).chunked(2)) { pair ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     pair.forEach { t ->
                         Row(
@@ -76,14 +76,14 @@ fun HomeScreen(current: Track, playing: Boolean, onPlay: (Track) -> Unit) {
                             Text(
                                 t.title, Modifier.padding(horizontal = 8.dp), fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold, maxLines = 2,
-                                color = if (t == current && playing) Green else Color.White,
+                                color = if (t == current && playing) Green else Ink,
                             )
                         }
                     }
                 }
             }
-            item { Shelf("Jump back in", sampleTracks.reversed().take(6), current, playing, onPlay) }
-            item { Shelf("Made for you", sampleTracks, current, playing, onPlay) }
+            item { Shelf(if (isApple) "Top Picks for You" else "Jump back in", sampleTracks.reversed().take(6), current, playing, onPlay) }
+            item { Shelf(if (isApple) "Made for You" else "Made for you", sampleTracks, current, playing, onPlay) }
             item { Shelf("Your favorite artists", artists, current, playing, onPlay, round = true) }
             item { Shelf("Recently played", sampleTracks.shuffled(java.util.Random(7)), current, playing, onPlay) }
         }
@@ -97,7 +97,7 @@ private fun Shelf(
 ) {
     val size = if (round) 120.dp else 140.dp
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(if (isApple) "$title  ›" else title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(list) { t ->
                 val active = t == current && playing
@@ -106,7 +106,7 @@ private fun Shelf(
                     Text(
                         t.title, Modifier.padding(top = 6.dp).fillMaxWidth(), fontSize = 13.sp,
                         fontWeight = FontWeight.Bold, maxLines = 1,
-                        color = if (active) Green else Color.White,
+                        color = if (active) Green else Ink,
                         textAlign = if (round) TextAlign.Center else TextAlign.Start,
                     )
                     if (!round) Text(t.artist, color = Sub, fontSize = 12.sp, maxLines = 1)
